@@ -14,21 +14,26 @@ const Homepage = () => {
   };
 
   return (
-    <div className="home-page">
-      <header className="home-header">
-        <h1>Welcome to My Homepage</h1>
-      </header>
-      <section className="home-content">
-        <p>This is a simple React homepage example.</p>
-        <p>Feel free to customize and expand it as you like!</p>
-      </section>
-      <div className="button-container">
-        <button className="btn" onClick={goToAnalysis}>Analysis</button>
-        <button className="btn" onClick={goToBroadCasting}>Broadcasting</button>
+    <div id="wrap">
+      <div className="mainContent">
+        <div className="leftContent">
+          <div className="videoBox"></div>
+        </div>
+        <div className="rightContent">
+          <div className="logo">익명성</div>
+          <div className="btnArea">
+            <button className="analysis" onClick={goToAnalysis}>Analysis</button>
+            <button className="broadcasting" onClick={goToBroadCasting}>Broadcasting</button>
+          </div>
+          <div className="search">
+            <input type="text" placeholder='Search...' />
+          </div>
+        </div>
       </div>
-      <footer className="home-footer">
-        <p>© 2024 My Simple Website</p>
-      </footer>
+      <div className="information">
+
+      </div>
+      
     </div>
   );
 };

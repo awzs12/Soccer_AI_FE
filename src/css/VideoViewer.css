@@ -1,0 +1,18 @@
+.videoviewerBody {
+    padding: 20px;
+    background-color: #f4f4f9;
+    min-height: 100vh;
+  }
+  
+  .videoviewerBody h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+  }
+  
+  .videoviewerBody iframe {
+    display: block;
+    margin: 0 auto;
+    border: none;
+    border-radius: 8px;
+  }

@@ -16,6 +16,16 @@ const Analysis = () => {
     navigate('/analysis/makevideo'); 
   };
 
+  const handleDeleteVideo = (id) => {
+    const updatedVideos = videos.filter(video => video.id !== id);
+    setVideos(updatedVideos);
+    localStorage.setItem('analysisVideos', JSON.stringify(updatedVideos));
+  };
+
+  const handleVideoClick = (id) => {
+    navigate(`/videoviewer/analysis/${id}`);
+  };
+
   return (
     <div>
       <Sidebar />
@@ -29,14 +39,25 @@ const Analysis = () => {
 
         <div className="videoList">
           {videos.map((video) => (
-            <div key={video.id} className="videoContent" onClick={() => navigate(`/videoviewer/analysis/${video.id}`)}> 
-              <div className="thumbnail">
-                <img src={video.thumbnail} alt={`${video.title} thumbnail`} />
+            <div key={video.id} className="videoContent">
+              <div onClick={() => handleVideoClick(video.id)}>
+                <div className="thumbnail">
+                  <img src={video.thumbnail} alt={`${video.title} thumbnail`} />
+                </div>
+                <div className="videoInfo">
+                  <h3>{video.title}</h3>
+                  <p>ID: {video.id}</p>
+                </div>
               </div>
-              <div className="videoInfo">
-                <h3>{video.title}</h3>
-                <p>ID: {video.id}</p>
-              </div>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteVideo(video.id);
+                }}
+                className="deleteButton"
+              >
+                Delete
+              </button>
             </div>
           ))}
         </div>
@@ -45,4 +66,4 @@ const Analysis = () => {
   );
 };
 
-export default Analysis; 
+export default Analysis;

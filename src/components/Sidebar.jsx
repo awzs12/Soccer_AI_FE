@@ -16,7 +16,7 @@ const Sidebar = () => {
       </button>
       <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
         <button className="close-btn" onClick={toggleSidebar}>×</button>
-        <h2>Menu</h2>
+        <h2></h2>
         <Link to="/" onClick={toggleSidebar}>Home</Link>
         <Link to="/analysis" onClick={toggleSidebar}>Analysis</Link>
         <Link to="/broadcasting" onClick={toggleSidebar}>Broadcasting</Link>

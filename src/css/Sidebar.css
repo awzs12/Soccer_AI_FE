@@ -23,6 +23,7 @@ body {
 
 .sidebar-icon {
   font-size: 24px;
+  color: #2c3e50;
 }
 
 .sidebar {
@@ -41,8 +42,8 @@ body {
 
 .sidebar.open {
   transform: translateX(0);
+  color: #fff;
 }
-
 .sidebar.closed {
   transform: translateX(-100%);
 }
@@ -59,7 +60,7 @@ body {
 }
 
 .sidebar h2 {
-  margin-bottom: 20px;
+  margin-bottom: 50px;
 }
 
 .sidebar a {

@@ -6,15 +6,13 @@ import '../../css/BroadCasting.css';
 const BroadCasting = () => {
   const [videos, setVideos] = useState([]);
   const navigate = useNavigate();
+  const [videoLink, setVideoLink] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const savedVideos = JSON.parse(localStorage.getItem('broadcastingVideos')) || [];
+    const savedVideos = JSON.parse(localStorage.getItem('broadcastingVideos') || '[]');
     setVideos(savedVideos);
   }, []);
-
-  const handleAddVideo = () => {
-    navigate('/broadcasting/makevideo');
-  };
 
   const handleDeleteVideo = (id) => {
     const updatedVideos = videos.filter(video => video.id !== id);
@@ -26,15 +24,67 @@ const BroadCasting = () => {
     navigate(`/videoviewer/broadcasting/${id}`);
   };
 
+  const extractVideoId = (url) => {
+    const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|watch\?.+&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const handleInputChange = (e) => {
+    setVideoLink(e.target.value);
+    setError('');
+  };
+
+  const handleVideoLoad = async () => {
+    const videoId = extractVideoId(videoLink);
+    if (videoId) {
+      try {
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=AIzaSyDi0CfLxwI9TsOXQCfRv-90MEokH3hO3YI`);
+        const data = await response.json();
+        if (data.items.length > 0) {
+          const videoInfo = {
+            id: videoId,
+            title: data.items[0].snippet.title,
+            thumbnail: data.items[0].snippet.thumbnails.medium.url
+          };
+          
+          // 로컬 스토리지에 저장
+          const savedVideos = JSON.parse(localStorage.getItem('broadcastingVideos') || '[]');
+          savedVideos.push(videoInfo);
+          localStorage.setItem('broadcastingVideos', JSON.stringify(savedVideos));
+
+          // VideoViewer 페이지로 즉시 이동
+          navigate(`/videoviewer/broadcasting/${videoId}`);
+        } else {
+          setError('Video not found');
+        }
+      } catch (error) {
+        console.error('Error fetching video info:', error);
+        setError('Error fetching video info');
+      }
+    } else {
+      setError('Invalid YouTube URL');
+    }
+  };
+
   return (
     <div>
       <Sidebar />
       <div className='broadcastingBody'>
-        <div className="contentHeader">
-          <h1>Broadcasting</h1>
-          <button onClick={handleAddVideo} className="addVideoButton">
-            Add Broadcast
-          </button>
+        <h1>Broadcasting</h1>
+
+        <div className="makevideoBody">
+          <div className="search">
+            <input
+              type="text"
+              value={videoLink}
+              onChange={handleInputChange}
+              placeholder="Enter YouTube Video URL"
+              className="videoInput"
+            />
+            <button onClick={handleVideoLoad} className="loadButton">Load Video</button>
+          </div>
+          {error && <p className="error">{error}</p>}
         </div>
 
         <div className="videoList">
@@ -56,7 +106,7 @@ const BroadCasting = () => {
                 }}
                 className="deleteButton"
               >
-                Delete
+                X
               </button>
             </div>
           ))}

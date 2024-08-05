@@ -5,4 +5,20 @@
   margin: 0;
   outline: none;
   box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+.deleteButton {
+  position: absolute;
+  top: 5px;
+  right: 3px;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  background-color: transparent;
+  line-height: 24px;
+  padding: 5px;
+}
+.deleteButton:hover{
+  background-color: rgba(255, 255, 255, 0.2);
 }

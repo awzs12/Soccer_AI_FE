@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import '../../css/Analysis.css'; 
+import '../../css/MakeVideo.css';
 
 const Analysis = () => { 
   const [videos, setVideos] = useState([]);
   const navigate = useNavigate();
+  const [videoLink, setVideoLink] = useState('');
+  const [error, setError] = useState('');
+  const { type } = useParams();
 
   useEffect(() => {
     const savedVideos = JSON.parse(localStorage.getItem('analysisVideos') || '[]');
     setVideos(savedVideos);
   }, []);
-
-  const handleAddVideo = () => {
-    navigate('/analysis/makevideo'); 
-  };
 
   const handleDeleteVideo = (id) => {
     const updatedVideos = videos.filter(video => video.id !== id);
@@ -26,15 +26,71 @@ const Analysis = () => {
     navigate(`/videoviewer/analysis/${id}`);
   };
 
+  const extractVideoId = (url) => {
+    const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|watch\?.+&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const handleInputChange = (e) => {
+    setVideoLink(e.target.value);
+    setError('');
+  };
+
+  const handleVideoLoad = async () => {
+    const videoId = extractVideoId(videoLink);
+    if (videoId) {
+      try {
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=AIzaSyDi0CfLxwI9TsOXQCfRv-90MEokH3hO3YI`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.items.length > 0) {
+          const videoInfo = {
+            id: videoId,
+            title: data.items[0].snippet.title,
+            thumbnail: data.items[0].snippet.thumbnails.medium.url
+          };
+          
+          const savedVideos = JSON.parse(localStorage.getItem('analysisVideos') || '[]');
+          savedVideos.push(videoInfo);
+          localStorage.setItem('analysisVideos', JSON.stringify(savedVideos));
+
+          navigate(`/videoviewer/analysis/${videoId}`);
+        } else {
+          setError('Video not found');
+        }
+      } catch (error) {
+        console.error('Error fetching video info:', error);
+        setError('Error fetching video info');
+      }
+    } else {
+      setError('Invalid YouTube URL');
+    }
+  };
+
   return (
     <div>
       <Sidebar />
       <div className='analysisBody'> 
-        <div className="contentHeader">
-          <h1>Video Analysis</h1> 
-          <button onClick={handleAddVideo} className="addVideoButton">
-            Add Video
-          </button>
+        <div className="imgBox">
+          <img src="" alt="" />
+        </div>
+        <h1>Analysis</h1>
+
+        <div className="makevideoBody">
+          <div className="search">
+            <input
+              type="text"
+              value={videoLink}
+              onChange={handleInputChange}
+              placeholder="Enter YouTube Video URL"
+              className="videoInput"
+            />
+            <button onClick={handleVideoLoad} className="loadButton">Load Video</button>
+          </div>
+          {error && <p className="error">{error}</p>}
         </div>
 
         <div className="videoList">
@@ -56,11 +112,12 @@ const Analysis = () => {
                 }}
                 className="deleteButton"
               >
-                Delete
+                X
               </button>
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );

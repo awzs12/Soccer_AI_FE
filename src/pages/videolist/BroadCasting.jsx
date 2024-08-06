@@ -48,13 +48,17 @@ const BroadCasting = () => {
             thumbnail: data.items[0].snippet.thumbnails.medium.url
           };
           
-          // 로컬 스토리지에 저장
+          // 로컬 스토리지에서 비디오 목록을 가져오고 중복 체크
           const savedVideos = JSON.parse(localStorage.getItem('broadcastingVideos') || '[]');
-          savedVideos.push(videoInfo);
-          localStorage.setItem('broadcastingVideos', JSON.stringify(savedVideos));
-
-          // VideoViewer 페이지로 즉시 이동
-          navigate(`/videoviewer/broadcasting/${videoId}`);
+          const isDuplicate = savedVideos.some(video => video.id === videoId);
+          if (!isDuplicate) {
+            savedVideos.push(videoInfo);
+            localStorage.setItem('broadcastingVideos', JSON.stringify(savedVideos));
+            setVideos(savedVideos); // 상태 업데이트
+            navigate(`/videoviewer/broadcasting/${videoId}`);
+          } else {
+            setError('This video is already added');
+          }
         } else {
           setError('Video not found');
         }

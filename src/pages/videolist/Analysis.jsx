@@ -52,12 +52,18 @@ const Analysis = () => {
             title: data.items[0].snippet.title,
             thumbnail: data.items[0].snippet.thumbnails.medium.url
           };
-          
-          const savedVideos = JSON.parse(localStorage.getItem('analysisVideos') || '[]');
-          savedVideos.push(videoInfo);
-          localStorage.setItem('analysisVideos', JSON.stringify(savedVideos));
 
-          navigate(`/videoviewer/analysis/${videoId}`);
+          // 로컬 스토리지에서 비디오 목록을 가져오고 중복 체크
+          const savedVideos = JSON.parse(localStorage.getItem('analysisVideos') || '[]');
+          const isDuplicate = savedVideos.some(video => video.id === videoId);
+          if (!isDuplicate) {
+            savedVideos.push(videoInfo);
+            localStorage.setItem('analysisVideos', JSON.stringify(savedVideos));
+            setVideos(savedVideos); // 상태 업데이트
+            navigate(`/videoviewer/analysis/${videoId}`);
+          } else {
+            setError('This video is already added');
+          }
         } else {
           setError('Video not found');
         }

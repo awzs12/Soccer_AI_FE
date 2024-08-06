@@ -15,25 +15,34 @@
 
 .videoPlayer {
   width: 100%;
-  max-width: 1180px;
-  margin: 0 auto 40px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-  padding-top: 56.25%; /* 16:9 비율 */
+  height: 450px;
+  display: block;
+  max-width: 1180px; /* 최대 폭 설정 */
+  margin: 0 auto 40px; /* 상하 여백 설정 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* 그림자 설정 */
+  border-radius: 8px; /* 모서리 둥글게 설정 */
+  overflow: hidden; /* 내용이 넘칠 경우 숨김 */
+  position: relative; /* 자식 요소의 위치 기준 설정 */
+  padding-top: 56.25%; /* 16:9 비율 유지 */
+}
+.videoPlayer iframe {
+  position: absolute; /* 부모 요소에 절대 위치 */
+  top: 0; /* 상단에 맞춤 */
+  left: 0; /* 왼쪽에 맞춤 */
+  width: 100%; /* 부모 요소의 폭에 맞춤 */
+  height: 100%; /* 부모 요소의 높이에 맞춤 */
+  border: none; /* 테두리 없음 */
 }
 
-.videoPlayer video {
+.videoPlayer div {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  border: none;
 }
 
-.videoPlayer canvas {
+.videoOverlay {
   position: absolute;
   top: 0;
   left: 0;

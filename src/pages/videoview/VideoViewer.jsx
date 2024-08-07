@@ -1,277 +1,239 @@
-import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import '../../css/VideoViewer.css';
 
 const VideoViewer = () => {
-    const { type, videoId } = useParams();
+    const { videoId } = useParams();
     const [data, setData] = useState([]);
-    const [player, setPlayer] = useState(null);
     const canvasRef = useRef(null);
     const playerRef = useRef(null);
+    const playerInstanceRef = useRef(null);
     const isYouTubeAPIReady = useRef(false);
     const animationFrameId = useRef(null);
+
+    const fetchData = useCallback(async () => {
+        try {
+            console.log('Fetching data...');
+            const response = await fetch(`http://localhost:8081/api/players/by-video?videoId=${encodeURIComponent(videoId)}`);
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
+            const data = await response.json();
+            console.log('Fetched data:', data);
+    
+            // 데이터 구조를 확인
+            console.log('Data type:', typeof data);
+            console.log('Data length:', data.length);
+       
+
+            let items = [];
+            if (Array.isArray(data)) {
+                data.forEach((item, index) => {
+                    items.push(item);
+                });
+            }
+            console.log('items:',items)
+    
+            // 데이터를 상태에 저장
+            setData(items);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    }, [videoId]);
+    
 
     useEffect(() => {
         if (!videoId) {
             console.error('No videoId provided');
             return;
         }
-
-        const fetchData = async () => {
-            try {
-                const response = await fetch(`http://localhost:8081/api/players/by-video?videoId=${encodeURIComponent(videoId)}`);
-                if (!response.ok) {
-                    throw new Error(`Network response was not ok: ${response.statusText}`);
-                }
-                const data = await response.json();
-                console.log('Fetched data:', data);
-                setData(data);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-
         fetchData();
-    }, [videoId]);
+    }, [videoId, fetchData]);
 
     const drawOverlay = useCallback(() => {
         console.log('drawOverlay called');
-        console.log('Player:', player);
-        console.log('Canvas:', canvasRef.current);
-        
-        if (!player || !canvasRef.current || !playerRef.current) {
-            console.error('Player or canvas not available');
-            return;
-        }
-        
+    
         const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-            console.error('Failed to get 2D context from canvas');
+        const ctx = canvas?.getContext('2d');
+        const playerElement = playerRef.current;
+        const player = playerInstanceRef.current;
+    
+        if (!canvas || !ctx || !playerElement || !player) {
+            console.log('Player or CanvasRef is not ready');
             return;
         }
-        
-        const playerWidth = playerRef.current.clientWidth;
-        const playerHeight = playerRef.current.clientHeight;
-        
-        if (playerWidth <= 0 || playerHeight <= 0) {
-            console.error('Player dimensions are not available');
-            return;
-        }
-        
+    
+        const playerWidth = playerElement.clientWidth || 800;
+        const playerHeight = playerElement.clientHeight || 450;
+    
         canvas.width = playerWidth;
         canvas.height = playerHeight;
-        
-        const currentTime = player.getCurrentTime();
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        const currentFrameData = data.filter(item => Math.abs(item.timestamp - currentTime) < 0.1);
-        
-        currentFrameData.forEach(item => {
-            const x = item.x * canvas.width;
-            const y = item.y * canvas.height;
-            const width = item.width * canvas.width;
-            const height = item.height * canvas.height;
-        
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x, y, width, height);
-        
-            ctx.font = '16px Arial';
-            ctx.fillStyle = 'red';
-            ctx.fillText(`ID: ${item.trackId}`, x, y - 10);
-        });
-        
-        if (player.getPlayerState() === window.YT.PlayerState.PLAYING) {
-            animationFrameId.current = requestAnimationFrame(drawOverlay);
-        } else {
-            if (animationFrameId.current) {
-                cancelAnimationFrame(animationFrameId.current);
-                animationFrameId.current = null;
-            }
-        }
-    }, [data, player]);
     
+        console.log('Canvas size:', canvas.width, canvas.height);
+        console.log('Player size:', playerWidth, playerHeight);
     
+        if (player instanceof window.YT.Player && typeof player.getPlayerState === 'function') {
+            if (player.getPlayerState() === window.YT.PlayerState.PLAYING) {
+                if (typeof player.getCurrentTime === 'function') {
+                    try {
+                        const currentTime = player.getCurrentTime();
+                        const fps = 30; // 30 FPS
+                        const currentFrame = Math.floor(currentTime * fps);
+                        console.log('Current time:', currentTime, 'Frame:', currentFrame);
+    
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const onPlayerReady = useCallback((event) => {
-        console.log('YouTube player is ready');
-        const playerInstance = event.target;
-        setPlayer(playerInstance);
     
-        const updateCanvasSize = () => {
-            if (playerRef.current) {
-                const playerWidth = playerRef.current.clientWidth;
-                const playerHeight = playerRef.current.clientHeight;
-                console.log(`Player dimensions on ready: ${playerWidth}x${playerHeight}`);
-                
-                if (playerWidth > 0 && playerHeight > 0) {
-                    canvasRef.current.width = playerWidth;
-                    canvasRef.current.height = playerHeight;
-                    drawOverlay(); // 초기 오버레이 그리기
+                        // Filtering data with tolerance
+                        const tolerance = 15; // Tolerance for frame number
+                        console.log('data:',data.item.frameNumber);
+                        const filteredData = data.filter(item =>
+                            item.frameNumber !== undefined &&
+                            Math.abs(item.frameNumber - currentFrame) <= tolerance
+                            
+                        );
+    
+                        console.log('Filtered Data:', filteredData);
+                        
+    
+                        if (filteredData.length === 0) {
+                            console.log('No data to draw for current frame.');
+                            return;
+                        }
+    
+                        filteredData.forEach(item => {
+                            console.log('Drawing item:', item.x, item.y, item.width, item.height);
+    
+                            const x = item.x * canvas.width;
+                            const y = item.y * canvas.height;
+                            const width = item.width * canvas.width;
+                            const height = item.height * canvas.height;
+    
+                            ctx.strokeStyle = 'red';
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(x, y, width, height);
+    
+                            ctx.font = '16px Arial';
+                            ctx.fillStyle = 'red';
+                            ctx.fillText(`${item.jerseyNumber}`, x, y - 10);
+    
+                            // Display team and trackID
+                            ctx.font = '12px Arial';
+                            ctx.fillStyle = 'blue';
+                            ctx.fillText(`Team: ${item.team}`, x, y + height + 10);
+                            ctx.fillText(`Track ID: ${item.trackId}`, x, y + height + 25);
+                        });
+                    } catch (error) {
+                        console.error('Error drawing overlay:', error);
+                    }
                 } else {
-                    console.error('Player dimensions are invalid in onPlayerReady');
+                    console.log('getCurrentTime method is not available on player');
                 }
             } else {
-                console.error('PlayerRef not available on onPlayerReady');
+                console.log('Player is not in PLAYING state, current state:', player.getPlayerState());
             }
-        };
-    
-        // 일정 시간 지연 후 크기 설정 시도
-        setTimeout(updateCanvasSize, 1000);
-    
-        // 크기 변경 감지를 위해 resizeObserver 등록
-        const resizeObserver = new ResizeObserver(() => {
-            updateCanvasSize();
-        });
-    
-        resizeObserver.observe(playerRef.current);
-    
-        return () => resizeObserver.disconnect(); // 컴포넌트 언마운트 시 옵저버 정리
-    }, [drawOverlay]);
-    
-    const onPlayerStateChange = useCallback((event) => {
-        console.log('Player state changed:', event.data);
-        const newState = event.data;
-
-        if (newState === window.YT.PlayerState.PLAYING) {
-            console.log('Player is playing');
-            if (!animationFrameId.current) {
-                animationFrameId.current = requestAnimationFrame(drawOverlay);
-            }
-        } else if (newState === window.YT.PlayerState.PAUSED || newState === window.YT.PlayerState.ENDED) {
-            console.log('Player is paused or ended');
-            if (animationFrameId.current) {
-                cancelAnimationFrame(animationFrameId.current);
-                animationFrameId.current = null;
-            }
+        } else {
+            console.log('Player object is not an instance of YT.Player or getPlayerState method is not available');
         }
-    }, [drawOverlay]);
+    }, [data]);
 
     const initializeYouTubePlayer = useCallback(() => {
-        if (!playerRef.current) {
-            console.error('Player reference is not available');
-            return;
-        }
-    
-        if (player) return;
-    
+        if (!playerRef.current || playerInstanceRef.current) return;
+
+        console.log('Initializing YouTube player:', playerRef.current);
+
         const newPlayer = new window.YT.Player(playerRef.current, {
             height: '450',
             width: '800',
             videoId: videoId,
             events: {
-                'onReady': onPlayerReady,
-                'onStateChange': onPlayerStateChange
+                'onReady': (event) => {
+                    console.log('YouTube player is ready:', event.target);
+                    playerInstanceRef.current = event.target;
+
+                    setTimeout(() => {
+                        drawOverlay(); // Draw overlay once player is ready
+                    }, 1000); // 1 second delay
+                },
+                'onStateChange': (event) => {
+                    console.log('Player state changed:', event.data);
+                    if (event.data === window.YT.PlayerState.PLAYING) {
+                        if (!animationFrameId.current) {
+                            const updateOverlay = () => {
+                                drawOverlay();
+                                animationFrameId.current = requestAnimationFrame(updateOverlay);
+                            };
+                            updateOverlay();
+                        }
+                    } else if (event.data === window.YT.PlayerState.PAUSED || event.data === window.YT.PlayerState.ENDED) {
+                        if (animationFrameId.current) {
+                            cancelAnimationFrame(animationFrameId.current);
+                            animationFrameId.current = null;
+                        }
+                    }
+                }
             }
         });
-        setPlayer(newPlayer);
-        console.log('YouTube player initialized');
-    }, [videoId, player, onPlayerReady, onPlayerStateChange]);
+
+        console.log('New Player created:', newPlayer);
+        playerInstanceRef.current = newPlayer;
+    }, [videoId, drawOverlay]);
 
     useEffect(() => {
+        const onYouTubeIframeAPIReady = () => {
+            console.log('YouTube IFrame API is ready.');
+            isYouTubeAPIReady.current = true;
+            initializeYouTubePlayer();
+        };
+
         if (window.YT && window.YT.Player) {
-            console.log('YouTube API is loaded');
-            if (!isYouTubeAPIReady.current) {
-                initializeYouTubePlayer();
-                isYouTubeAPIReady.current = true;
-            }
+            onYouTubeIframeAPIReady();
         } else {
-            window.onYouTubeIframeAPIReady = () => {
-                console.log('YouTube API is ready');
-                initializeYouTubePlayer();
-                isYouTubeAPIReady.current = true;
-            };
+            window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
             const script = document.createElement('script');
             script.src = "https://www.youtube.com/iframe_api";
             script.async = true;
+            script.onload = () => console.log('YouTube IFrame API script loaded.');
             document.body.appendChild(script);
         }
     }, [initializeYouTubePlayer]);
-    
+
     useEffect(() => {
-        const checkAndSetSize = () => {
-            if (playerRef.current && canvasRef.current) {
-                const playerWidth = playerRef.current.clientWidth;
-                const playerHeight = playerRef.current.clientHeight;
-    
-                if (playerWidth > 0 && playerHeight > 0) {
-                    canvasRef.current.width = playerWidth;
-                    canvasRef.current.height = playerHeight;
-                    drawOverlay(); // 크기 변경 후 drawOverlay 호출
-                } else {
-                    console.error('Player dimensions are invalid');
-                }
+        const resizeObserver = new ResizeObserver(() => {
+            console.log('ResizeObserver triggered');
+            const playerElement = playerRef.current;
+            const canvas = canvasRef.current;
+            if (playerElement && canvas) {
+                canvas.width = playerElement.clientWidth || 800;
+                canvas.height = playerElement.clientHeight || 450;
+                console.log('Canvas size updated:', canvas.width, canvas.height);
+                drawOverlay();
+            }
+        });
+
+        const playerElement = playerRef.current;
+        if (playerElement) {
+            resizeObserver.observe(playerElement);
+        }
+
+        return () => {
+            if (playerElement) {
+                resizeObserver.unobserve(playerElement);
+            }
+            if (animationFrameId.current) {
+                cancelAnimationFrame(animationFrameId.current);
+                animationFrameId.current = null;
             }
         };
-    
-        checkAndSetSize();
-    }, [player, drawOverlay]);
-    useEffect(() => {
-        if (playerRef.current) {
-            const resizeObserver = new ResizeObserver(() => {
-                const playerWidth = playerRef.current.clientWidth;
-                const playerHeight = playerRef.current.clientHeight;
-                console.log(`ResizeObserver: Player dimensions are ${playerWidth}x${playerHeight}`);
-                
-                if (playerWidth > 0 && playerHeight > 0) {
-                    canvasRef.current.width = playerWidth;
-                    canvasRef.current.height = playerHeight;
-                    drawOverlay();
-                } else {
-                    console.error('ResizeObserver: Player dimensions are invalid');
-                }
-            });
-    
-            resizeObserver.observe(playerRef.current);
-    
-            return () => resizeObserver.disconnect();
-        }
-    }, [player, drawOverlay]);
-    
-    useLayoutEffect(() => {
-        if (player && playerRef.current && canvasRef.current) {
-            const playerWidth = playerRef.current.clientWidth;
-            const playerHeight = playerRef.current.clientHeight;
-    
-            console.log(`useLayoutEffect: Player dimensions are ${playerWidth}x${playerHeight}`);
-    
-            if (playerWidth > 0 && playerHeight > 0) {
-                canvasRef.current.width = playerWidth;
-                canvasRef.current.height = playerHeight;
-                drawOverlay(); // 크기 변경 후 drawOverlay 호출
-            } else {
-                console.error('useLayoutEffect: Player dimensions are invalid');
-            }
-        }
-    }, [player, drawOverlay]);
-    
+    }, [drawOverlay]);
 
     return (
-        <div>
+        <div className="video-viewer">
             <Sidebar />
-            <div className='videoviewerBody'>
-                <h1>{type === 'analysis' ? 'Analysis View' : type === 'broadcasting' ? 'Broadcasting View' : 'Default View'}</h1>
-                <div className="videoPlayer">
-                    <div ref={playerRef} />
-                    <canvas ref={canvasRef} className="videoOverlay" />
-                </div>
-                <div className="additionalContent">
-                    {type === 'analysis' && (
-                        <div className="analysisContent">
-                            <h2>Analysis Tools</h2>
-                            <p>Analysis specific content goes here.</p>
-                        </div>
-                    )}
-                    {type === 'broadcasting' && (
-                        <div className="broadcastingContent">
-                            <h2>Broadcasting Controls</h2>
-                            <p>Broadcasting specific content goes here.</p>
-                        </div>
-                    )}
-                </div>
+            <div className="video-container">
+                <div ref={playerRef} className="video-player" />
+                <canvas ref={canvasRef} className="overlay-canvas" />
             </div>
         </div>
     );

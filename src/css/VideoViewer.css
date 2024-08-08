@@ -1,37 +1,29 @@
-.videoviewerBody {
+.video-viewer {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
 }
 
-.videoContainer {
-  display: flex;
-  align-items: flex-start;
+.video-container {
+  position: relative; /* 비디오와 캔버스의 위치를 정렬하기 위한 기준 */
+  width: 800px; /* 비디오와 캔버스의 공통 폭 */
+  height: 450px; /* 비디오와 캔버스의 공통 높이 */
 }
 
-.videoPlayer {
-  position: relative;
-  width: 800px;
-}
-
-.videoOverlay {
-  position: absolute;
+.video-player {
+  position: absolute; /* 비디오를 비디오 컨테이너 안에서 위치시키기 위한 설정 */
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
 }
 
-.playerList {
-  margin-left: 20px;
-  width: 200px;
-}
-
-.playerList ul {
-  list-style: none;
-  padding: 0;
-}
-
-.playerList li {
-  cursor: pointer;
-  margin-bottom: 5px;
+.overlay-canvas {
+  position: absolute; /* 캔버스를 비디오 컨테이너 안에서 위치시키기 위한 설정 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* 캔버스가 클릭 이벤트를 차단하지 않도록 설정 */
 }

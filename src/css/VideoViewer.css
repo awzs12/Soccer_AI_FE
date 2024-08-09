@@ -1,29 +1,78 @@
 .video-viewer {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
+  min-height: 100vh;
+  background-color: #f0f0f0;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 .video-container {
-  position: relative; /* 비디오와 캔버스의 위치를 정렬하기 위한 기준 */
-  width: 800px; /* 비디오와 캔버스의 공통 폭 */
-  height: 450px; /* 비디오와 캔버스의 공통 높이 */
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 }
 
 .video-player {
-  position: absolute; /* 비디오를 비디오 컨테이너 안에서 위치시키기 위한 설정 */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  width: 800px;
+  height: 450px;
+  position: relative;
+  border-radius: 5px;
+  overflow: hidden;
 }
 
 .overlay-canvas {
-  position: absolute; /* 캔버스를 비디오 컨테이너 안에서 위치시키기 위한 설정 */
+  position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* 캔버스가 클릭 이벤트를 차단하지 않도록 설정 */
+  width: 800px;
+  height: 450px;
+  pointer-events: none;
+}
+
+.player-list {
+  margin-left: 20px;
+  text-align: left;
+  width: 300px; /* 너비 증가 */
+  height: 450px; /* 높이를 비디오 플레이어와 동일하게 설정 */
+  overflow-y: auto;
+  background-color: #f8f8f8;
+  border-radius: 5px;
+  padding: 15px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.player-list h2 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.2em;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.player-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2열 그리드 레이아웃 */
+  gap: 10px; /* 그리드 아이템 간 간격 */
+}
+
+.player-list li {
+  padding: 8px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.player-list li:hover {
+  background-color: #e9e9e9;
 }

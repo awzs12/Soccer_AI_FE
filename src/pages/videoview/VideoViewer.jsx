@@ -6,12 +6,14 @@ import '../../css/VideoViewer.css';
 const VideoViewer = () => {
     const { videoId } = useParams();
     const [allItems, setAllItems] = useState([]);
-    const [Items, setItems] = useState([]);
+    const [items, setItems] = useState([]); // 기존 Items를 items로 수정
     const canvasRef = useRef(null);
     const playerRef = useRef(null);
     const playerInstanceRef = useRef(null);
     const isYouTubeAPIReady = useRef(false);
     const animationFrameId = useRef(null);
+
+    
 
     const drawOverlay = useCallback(() => {
         const canvas = canvasRef.current;
@@ -19,7 +21,6 @@ const VideoViewer = () => {
         const playerElement = playerRef.current;
         const player = playerInstanceRef.current;
         
-
         if (!canvas || !ctx || !playerElement || !player) {
             return;
         }
@@ -38,7 +39,11 @@ const VideoViewer = () => {
                     const currentFrame = Math.floor(currentTime * fps);
 
                     // Filter items for the current frame
-                    const filteredItems = allItems.filter(item => item.frameNumber === currentFrame);
+                    const filteredItems = allItems
+                    .filter(item => item.frameNumber === currentFrame)
+                    .filter(item => item.jerseyNumber !== 100 && item.jerseyNumber !== 0);
+                     
+                    
 
                     // Update state with filtered items
                     setItems(filteredItems);
@@ -47,61 +52,60 @@ const VideoViewer = () => {
                     console.log('Current time:', currentTime);
                     console.log('Current frame:', currentFrame);
                     console.log('Filtered items:', filteredItems);
-                    console.log('items:', Items);
+                    console.log('items:', items);
                   
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     
-            
                     for (const item of filteredItems) {
                         console.log('Drawing item:', item);
+                        const x = (item.x / 1920) * canvas.width;
+                        const y = (item.y / 1088) * canvas.height;
+                        const width = (item.width / 1920) * canvas.width;
+                        const height = (item.height / 1088) * canvas.height;
                     
-                        const x = ((item.x)/1920 * canvas.width) ;
-                        const y = (item.y/1088) * canvas.height ;
-                        const width = (item.width/1920) * canvas.width ;
-                        const height = (item.height/1088) * canvas.height ;
-                        console.log(x,y,width, height, canvas.width, canvas.height);
-    
-                        ctx.strokeStyle = 'red';
+                        // 발 쪽 중앙 좌표 계산
+                        const footX = x;
+                        const footY = y + (height / 2);
+                    
+                        // 포물선 크기 설정
+                        const paraboleWidth = width * 0.8;
+                        const paraboleHeight = height * 0.15;
+                    
+                        // 포물선 그리기
+                        ctx.beginPath();
+                        for (let i = -paraboleWidth / 2; i <= paraboleWidth / 2; i += 1) {
+                            const x = footX + i;
+                            const y = footY - ((4 * paraboleHeight / (paraboleWidth * paraboleWidth)) * (i * i));
+                            if (i === -paraboleWidth / 2) {
+                                ctx.moveTo(x, y);
+                            } else {
+                                ctx.lineTo(x, y);
+                            }
+                        }
+                        ctx.strokeStyle = 'rgba(0, 150, 255, 0.8)';
                         ctx.lineWidth = 2;
-                        ctx.strokeRect(x, y, width, height);
-    
-                        ctx.font = '16px Arial';
-                        ctx.fillStyle = 'red';
-                        ctx.fillText(`${item.jerseyNumber}`, x, y - 10);
-    
-                        ctx.font = '12px Arial';
-                        ctx.fillStyle = 'blue';
-                        ctx.fillText(`Team: ${item.team}`, x, y + height + 10);
-                        ctx.fillText(`Track ID: ${item.trackId}`, x, y + height + 25);
-
+                        ctx.stroke();
+                    
+                        // 저지 번호 그리기
+                        ctx.font = 'bold 14px Arial';
+                        ctx.fillStyle = 'white';
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                        ctx.lineWidth = 2;
+                        const text = `${item.jerseyNumber}`;
+                        const textWidth = ctx.measureText(text).width;
+                        ctx.strokeText(text, footX - textWidth / 2, footY + 20);
+                        ctx.fillText(text, footX - textWidth / 2, footY + 20);
                     }
-
+                    
+                    
+                    
+                    
                 } catch (error) {
                     console.error('Error drawing overlay:', error);
-                } finally {
-                    Items.forEach(item => {
-                        const x = item.x * canvas.width;
-                        const y = item.y * canvas.height;
-                        const width = item.width * canvas.width;
-                        const height = item.height * canvas.height;
-
-                        ctx.strokeStyle = 'red';
-                        ctx.lineWidth = 2;
-                        ctx.strokeRect(x, y, width, height);
-
-                        ctx.font = '16px Arial';
-                        ctx.fillStyle = 'red';
-                        ctx.fillText(`${item.jerseyNumber}`, x, y - 10);
-
-                        ctx.font = '12px Arial';
-                        ctx.fillStyle = 'blue';
-                        ctx.fillText(`Team: ${item.team}`, x, y + height + 10);
-                        ctx.fillText(`Track ID: ${item.trackId}`, x, y + height + 25);
-                    });
                 }
             }
         }
-    }, [allItems, Items]);
+    }, [allItems, items]); // items 상태에 의존
 
     const fetchData = useCallback(async () => {
         try {
@@ -220,12 +224,24 @@ const VideoViewer = () => {
         };
     }, [drawOverlay]);
 
+    
+
     return (
         <div className="video-viewer">
             <Sidebar />
             <div className="video-container">
-                <div ref={playerRef} className="video-player" />
-                <canvas ref={canvasRef} className="overlay-canvas" />
+                <div className="video-player-container">
+                    <div ref={playerRef} className="video-player" />
+                    <canvas ref={canvasRef} className="overlay-canvas" />
+                </div>
+                <div className="player-list">
+                    <h2>선수 목록</h2>
+                    <ul>
+                        {items.map(item => (
+                            <li key={item.idx}>{item.jerseyNumber}</li>
+                        ))}
+                    </ul>
+                </div>
             </div>
         </div>
     );

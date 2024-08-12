@@ -16,10 +16,13 @@
   justify-content: space-evenly;
   margin-bottom: 50px;
 }
-.mainContent .leftContent{
+.mainContent .leftContent {
+  background-image: url('../assets/images/1510_392.jpg');
   width: 50%;
   height: 45vw;
   background-color: #fff;
+  background-size: cover; /* 또는 contain */
+  background-position: right center;
 }
 /* .mainContent .leftContent .videoBox img{
   width: 100%;

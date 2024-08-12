@@ -1,80 +1,119 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Sidebar from '../../components/Sidebar';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom'; 
+import Sidebar from '../../components/Sidebar'; 
 import '../../css/Analysis.css'; 
 import '../../css/MakeVideo.css';
 
-const Analysis = () => { 
+const Analysis = () => {
   const [videos, setVideos] = useState([]);
-  const navigate = useNavigate();
   const [videoLink, setVideoLink] = useState('');
   const [error, setError] = useState('');
-  const { type } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [isRequesting, setIsRequesting] = useState(false);
+  const navigate = useNavigate();
 
+  
   useEffect(() => {
     const savedVideos = JSON.parse(localStorage.getItem('analysisVideos') || '[]');
     setVideos(savedVideos);
   }, []);
 
-  const handleDeleteVideo = (id) => {
-    const updatedVideos = videos.filter(video => video.id !== id);
-    setVideos(updatedVideos);
-    localStorage.setItem('analysisVideos', JSON.stringify(updatedVideos));
-  };
+  const handleDeleteVideo = useCallback((id) => {
+    console.log(`Deleting video with ID: ${id}`);
+    setVideos(prevVideos => {
+      const updatedVideos = prevVideos.filter(video => video.id !== id);
+      localStorage.setItem('analysisVideos', JSON.stringify(updatedVideos));
+      return updatedVideos;
+    });
+  }, []);
 
-  const handleVideoClick = (id) => {
+  const handleVideoClick = useCallback((id) => {
     navigate(`/videoviewer/analysis/${id}`);
-  };
+  }, [navigate]);
 
-  const extractVideoId = (url) => {
+  const extractVideoId = useCallback((url) => {
+    console.log(`Extracting video ID from URL: ${url}`);
     const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|watch\?.+&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
-  };
+  }, []);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     setVideoLink(e.target.value);
     setError('');
-  };
+    console.log(`Input changed: ${e.target.value}`);
+  }, []);
 
-  const handleVideoLoad = async () => {
-    const videoId = extractVideoId(videoLink);
-    if (videoId) {
-      try {
-        const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=AIzaSyDi0CfLxwI9TsOXQCfRv-90MEokH3hO3YI`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        if (data.items.length > 0) {
-          const videoInfo = {
-            id: videoId,
-            title: data.items[0].snippet.title,
-            thumbnail: data.items[0].snippet.thumbnails.medium.url
-          };
-
-          // 로컬 스토리지에서 비디오 목록을 가져오고 중복 체크
-          const savedVideos = JSON.parse(localStorage.getItem('analysisVideos') || '[]');
-          const isDuplicate = savedVideos.some(video => video.id === videoId);
-          if (!isDuplicate) {
-            savedVideos.push(videoInfo);
-            localStorage.setItem('analysisVideos', JSON.stringify(savedVideos));
-            setVideos(savedVideos); // 상태 업데이트
-            navigate(`/videoviewer/analysis/${videoId}`);
-          } else {
-            setError('This video is already added');
-          }
-        } else {
-          setError('Video not found');
-        }
-      } catch (error) {
-        console.error('Error fetching video info:', error);
-        setError('Error fetching video info');
-      }
-    } else {
-      setError('Invalid YouTube URL');
+  const handleVideoLoad = useCallback(async () => {
+ 
+    if (loading || isRequesting) {
+      console.log('Request or loading already in progress');
+      return;
     }
-  };
+  
+    setLoading(true);
+    setIsRequesting(true);
+  
+    const videoId = extractVideoId(videoLink);
+    if (!videoId) {
+      setError('Invalid YouTube URL');
+      setLoading(false);
+      setIsRequesting(false);
+      return;
+    }
+  
+    try {
+      console.log('Fetching YouTube video info');
+      const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=AIzaSyDi0CfLxwI9TsOXQCfRv-90MEokH3hO3YI`);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+  
+      const data = await response.json();
+      if (data.items.length === 0) {
+        setError('Video not found');
+        return;
+      }
+  
+      const videoInfo = {
+        id: videoId,
+        title: data.items[0].snippet.title,
+        thumbnail: data.items[0].snippet.thumbnails.medium.url
+      };
+  
+      const savedVideos = JSON.parse(localStorage.getItem('analysisVideos') || '[]');
+      if (savedVideos.some(video => video.id === videoId)) {
+        setError('This video is already added');
+        return;
+      }
+  
+      savedVideos.push(videoInfo);
+      localStorage.setItem('analysisVideos', JSON.stringify(savedVideos));
+      setVideos(savedVideos);
+  
+      console.log('Starting video analysis');
+      const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:8081';
+      const analysisResponse = await fetch(`${SERVER_URL}/api/analyze-video`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url: videoLink, path: `analysis/${videoId}` })
+      });
+  
+      if (!analysisResponse.ok) throw new Error(`Analysis request failed: ${analysisResponse.statusText}`);
+      const responseData = await analysisResponse.json();
+      console.log('Video analysis started:', responseData);
+  
+      navigate(`/videoviewer/analysis/${videoId}`);
+  
+    } catch (error) {
+      console.error('Error:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+      setIsRequesting(false);
+    }
+  }, [videoLink, loading, isRequesting, extractVideoId, navigate]);
+  
 
   return (
     <div>
@@ -94,7 +133,13 @@ const Analysis = () => {
               placeholder="Enter YouTube Video URL"
               className="videoInput"
             />
-            <button onClick={handleVideoLoad} className="loadButton">Load Video</button>
+            <button 
+              onClick={handleVideoLoad} 
+              className="loadButton" 
+              disabled={loading || isRequesting} // 요청 진행 중 비활성화
+            >
+              {loading ? 'Loading...' : 'Load Video'}
+            </button>
           </div>
           {error && <p className="error">{error}</p>}
         </div>
@@ -123,10 +168,9 @@ const Analysis = () => {
             </div>
           ))}
         </div>
-
       </div>
     </div>
   );
-};
+};  
 
-export default Analysis;
+export default React.memo(Analysis);

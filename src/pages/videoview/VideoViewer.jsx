@@ -7,6 +7,9 @@ const VideoViewer = () => {
     const { videoId } = useParams();
     const [allItems, setAllItems] = useState([]);
     const [items, setItems] = useState([]); // 기존 Items를 items로 수정
+    const [team0Items, setTeam0Items] = useState([]); // 팀 0 아이템
+    const [team1Items, setTeam1Items] = useState([]); // 팀 1 아이템
+    const [team2Items, setTeam2Items] = useState([]); // 팀 2 아이템
     const canvasRef = useRef(null);
     const playerRef = useRef(null);
     const playerInstanceRef = useRef(null);
@@ -43,7 +46,9 @@ const VideoViewer = () => {
                     .filter(item => item.frameNumber === currentFrame)
                     .filter(item => item.jerseyNumber !== 100 && item.jerseyNumber !== 0);
                      
-                    
+                    setTeam0Items(filteredItems.filter(item => item.team === 0));
+                    setTeam1Items(filteredItems.filter(item => item.team === 1));
+                    setTeam2Items(filteredItems.filter(item => item.team === 2));
 
                     // Update state with filtered items
                     setItems(filteredItems);
@@ -64,25 +69,26 @@ const VideoViewer = () => {
                         const height = (item.height / 1088) * canvas.height;
                     
                         // 발 쪽 중앙 좌표 계산
-                        const footX = x;
-                        const footY = y + (height / 2);
+                        const footX = x + (width / 2);
+                        const footY = y + height;
                     
-                        // 포물선 크기 설정
-                        const paraboleWidth = width * 0.8;
-                        const paraboleHeight = height * 0.15;
+                        // 반원 크기 설정
+                        const radius = width / 2;
                     
-                        // 포물선 그리기
+                        // const color = item.team === 0 ? 'rgba(255, 0, 0, 0.8)' : (item.team === 1 ? 'rgba(0, 0, 255, 0.8)' : null);
+                    
+                        //   팀에 따른 색상 설정
+                        const color = item.team === 0 
+                            ? 'rgba(255, 0, 0, 0.8)' 
+                            : (item.team === 2 
+                                ? 'rgba(0, 0, 255, 0.8)' 
+                                : 'rgba(255, 255, 0, 0.8)');  // team이 1일 경우 노란
+
+                    
+                        // 반원 그리기
                         ctx.beginPath();
-                        for (let i = -paraboleWidth / 2; i <= paraboleWidth / 2; i += 1) {
-                            const x = footX + i;
-                            const y = footY - ((4 * paraboleHeight / (paraboleWidth * paraboleWidth)) * (i * i));
-                            if (i === -paraboleWidth / 2) {
-                                ctx.moveTo(x, y);
-                            } else {
-                                ctx.lineTo(x, y);
-                            }
-                        }
-                        ctx.strokeStyle = 'rgba(0, 150, 255, 0.8)';
+                        ctx.arc(footX, footY, radius, 0, Math.PI, false);
+                        ctx.strokeStyle = color;
                         ctx.lineWidth = 2;
                         ctx.stroke();
                     
@@ -93,8 +99,8 @@ const VideoViewer = () => {
                         ctx.lineWidth = 2;
                         const text = `${item.jerseyNumber}`;
                         const textWidth = ctx.measureText(text).width;
-                        ctx.strokeText(text, footX - textWidth / 2, footY + 20);
-                        ctx.fillText(text, footX - textWidth / 2, footY + 20);
+                        ctx.strokeText(text, footX - textWidth / 2, footY - radius / 2);
+                        ctx.fillText(text, footX - textWidth / 2, footY - radius / 2);
                     }
                     
                     
@@ -235,9 +241,22 @@ const VideoViewer = () => {
                     <canvas ref={canvasRef} className="overlay-canvas" />
                 </div>
                 <div className="player-list">
-                    <h2>선수 목록</h2>
+                <h2>선수 목록</h2>
+                    <h3>팀 0</h3>
                     <ul>
-                        {items.map(item => (
+                        {team0Items.map(item => (
+                            <li key={item.idx}>{item.jerseyNumber}</li>
+                        ))}
+                    </ul>
+                    <h3>팀 1</h3>
+                    <ul>
+                        {team1Items.map(item => (
+                            <li key={item.idx}>{item.jerseyNumber}</li>
+                        ))}
+                    </ul>
+                    <h3>팀 2</h3>
+                    <ul>
+                        {team2Items.map(item => (
                             <li key={item.idx}>{item.jerseyNumber}</li>
                         ))}
                     </ul>

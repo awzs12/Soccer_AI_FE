@@ -1,5 +1,6 @@
 .video-viewer {
   display: flex;
+  flex-direction: column; /* 전체 레이아웃을 세로 방향으로 설정 */
   justify-content: center;
   align-items: center;
   min-height: 100vh;
@@ -10,13 +11,19 @@
 
 .video-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: row; /* 비디오 플레이어와 플레이어 리스트를 나란히 배치 */
   align-items: flex-start;
-  position: relative;
   background-color: #ffffff;
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 20px;
+  margin-bottom: 20px; /* 비디오 플레이어와 미니맵 사이의 간격 */
+}
+
+.video-player-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .video-player {
@@ -39,8 +46,8 @@
 .player-list {
   margin-left: 20px;
   text-align: left;
-  width: 300px; /* 너비 증가 */
-  height: 450px; /* 높이를 비디오 플레이어와 동일하게 설정 */
+  width: 300px; /* 플레이어 리스트의 너비 */
+  height: 450px; /* 비디오 플레이어와 동일한 높이 */
   overflow-y: auto;
   background-color: #f8f8f8;
   border-radius: 5px;
@@ -57,13 +64,15 @@
   margin-bottom: 15px;
 }
 
+.player-list h3 {
+  margin-top: 20px;
+  color: #666;
+}
+
 .player-list ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2열 그리드 레이아웃 */
-  gap: 10px; /* 그리드 아이템 간 간격 */
 }
 
 .player-list li {
@@ -75,4 +84,26 @@
 
 .player-list li:hover {
   background-color: #e9e9e9;
+}
+
+.minimap-container {
+  width: 800px; /* 미니맵의 너비 */
+  height: 450px; /* 미니맵의 높이 */
+  background: #ffffff; /* 배경색 */
+  padding: 10px; /* 패딩 추가 */
+  border-radius: 5px; /* 모서리 둥글게 설정 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px; /* 비디오 플레이어와 미니맵 사이의 간격 */
+}
+
+.minimap-canvas {
+  width: 100%;
+  height: 100%;
+  background-image: url('../assets/images/field.jpg'); /* 배경 이미지 추가 */
+  background-size: cover; /* 이미지 크기를 캔버스 크기에 맞춤 */
+  background-position: center; /* 이미지의 중심을 캔버스의 중심에 위치 */
+  border-radius: 5px; /* 배경 이미지의 모서리도 둥글게 설정 */
 }

@@ -45,7 +45,6 @@ const Analysis = () => {
   }, []);
 
   const handleVideoLoad = useCallback(async () => {
- 
     if (loading || isRequesting) {
       console.log('Request or loading already in progress');
       return;
@@ -98,7 +97,7 @@ const Analysis = () => {
         },
         body: JSON.stringify({ url: videoLink, path: `analysis/${videoId}` })
       });
-  
+       
       if (!analysisResponse.ok) throw new Error(`Analysis request failed: ${analysisResponse.statusText}`);
       const responseData = await analysisResponse.json();
       console.log('Video analysis started:', responseData);
@@ -113,6 +112,7 @@ const Analysis = () => {
       setIsRequesting(false);
     }
   }, [videoLink, loading, isRequesting, extractVideoId, navigate]);
+  
   
 
   return (

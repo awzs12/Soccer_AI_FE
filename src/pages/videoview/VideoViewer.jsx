@@ -80,12 +80,12 @@ const VideoViewer = () => {
             const y = (item.y / 680) * minimapHeight;
             const radius = 9;
 
-            const color = 'rgba(255, 0, 0, 0.8)';
-            // const color = item.team === 0 
-            //     ? 'rgba(255, 0, 0, 0.8)' 
-            //     : (item.team === 2 
-            //         ? 'rgba(0, 0, 255, 0.8)' 
-            //         : 'rgba(255, 255, 0, 0.8)');
+            // const color = 'rgba(255, 0, 0, 0.8)';
+            const color = item.team === 0 
+                ? 'rgba(255, 0, 0, 0.8)' 
+                : (item.team === 1 
+                    ? 'rgba(0, 0, 255, 0.8)' 
+                    : 'rgba(255, 255, 0, 0.8)');
 
             ctx.beginPath();
             ctx.arc(x, y, radius, 0, 2 * Math.PI, false);

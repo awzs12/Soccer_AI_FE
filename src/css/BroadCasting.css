@@ -58,12 +58,6 @@
   margin-bottom: 20px;
 }
 
-.videoList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-}
-
 .videoContent {
   background-color: #fff;
   border-radius: 8px;

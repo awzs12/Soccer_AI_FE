@@ -120,9 +120,9 @@ const Analysis = () => {
       <Sidebar />
       <div className='analysisBody'> 
         <div className="imgBox">
-          <img src="" alt="" />
+          <div className="bg"></div>
+          <h1>Analysis</h1>
         </div>
-        <h1>Analysis</h1>
 
         <div className="makevideoBody">
           <div className="search">

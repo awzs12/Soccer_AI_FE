@@ -10,9 +10,9 @@ const Analysis = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
+  const [status, setStatus] = useState('idle'); // 분석 상태를 관리하는 새로운 상태
   const navigate = useNavigate();
 
-  
   useEffect(() => {
     const savedVideos = JSON.parse(localStorage.getItem('analysisVideos') || '[]');
     setVideos(savedVideos);
@@ -44,6 +44,19 @@ const Analysis = () => {
     console.log(`Input changed: ${e.target.value}`);
   }, []);
 
+  const checkStatus = useCallback(async (videoId) => {
+    try {
+      const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:8081';
+      const statusResponse = await fetch(`${SERVER_URL}/api/status/${videoId}`);
+      if (!statusResponse.ok) throw new Error(`Status request failed: ${statusResponse.statusText}`);
+      const status = await statusResponse.text();
+      return status;
+    } catch (error) {
+      console.error('Error fetching status:', error);
+      return 'pending';
+    }
+  }, []);
+
   const handleVideoLoad = useCallback(async () => {
     if (loading || isRequesting) {
       console.log('Request or loading already in progress');
@@ -52,6 +65,7 @@ const Analysis = () => {
   
     setLoading(true);
     setIsRequesting(true);
+    setStatus('loading'); // 분석이 시작되면 상태를 'loading'으로 설정
   
     const videoId = extractVideoId(videoLink);
     if (!videoId) {
@@ -101,19 +115,28 @@ const Analysis = () => {
       if (!analysisResponse.ok) throw new Error(`Analysis request failed: ${analysisResponse.statusText}`);
       const responseData = await analysisResponse.json();
       console.log('Video analysis started:', responseData);
-  
+
+      // 분석 상태를 주기적으로 확인하고 완료되면 리디렉션
+      let status = await checkStatus(videoId);
+      while (status !== 'completed') {
+        console.log('Status:', status);
+        await new Promise(resolve => setTimeout(resolve, 5000)); // 5초 대기
+        status = await checkStatus(videoId);
+      }
+
+      console.log('Video analysis completed');
+      setStatus('completed'); // 분석이 완료되면 상태를 'completed'로 설정
       navigate(`/videoviewer/analysis/${videoId}`);
   
     } catch (error) {
       console.error('Error:', error);
       setError(error.message);
+      setStatus('idle'); // 에러가 발생하면 상태를 'idle'로 설정
     } finally {
       setLoading(false);
       setIsRequesting(false);
     }
-  }, [videoLink, loading, isRequesting, extractVideoId, navigate]);
-  
-  
+  }, [videoLink, loading, isRequesting, extractVideoId, navigate, checkStatus]);
 
   return (
     <div>
@@ -145,6 +168,9 @@ const Analysis = () => {
         </div>
 
         <div className="videoList">
+          {status === 'loading' && (
+            <p>데이터를 준비 중입니다...</p> // 분석 중일 때 표시
+          )}
           {videos.map((video) => (
             <div key={video.id} className="videoContent">
               <div onClick={() => handleVideoClick(video.id)}>

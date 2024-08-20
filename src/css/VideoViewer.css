@@ -60,6 +60,11 @@
   pointer-events: none;
 }
 
+.overlay-canvas.fullscreen {
+  position: fixed;
+  z-index: 9999;
+}
+
 .player-list{
   display: none;
 }

@@ -121,3 +121,56 @@
   background-position: center; /* 이미지의 중심을 캔버스의 중심에 위치 */
   border-radius: 5px; /* 배경 이미지의 모서리도 둥글게 설정 */
 }
+
+.search-container {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* .search-container input {
+  width: 200px;
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.search-container input:focus {
+  background-image: linear-gradient(#fff, #fff), linear-gradient(to right, #a2d17a 0%, #91d78b 29%, #7dd59b 67%, #52ac95 100%);
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  width: 500px;
+  height: 50px;
+  text-indent: 15px;
+  font-size: 22px;
+} */
+.search-container input {
+  width: 300px;
+  padding: 12px 20px;
+  font-size: 18px;
+  color: #333;
+  background-color: #f8f8f8;
+  border: 2px solid #ddd;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.search-container input::placeholder {
+  color: #999;
+}
+
+.search-container input:focus {
+  outline: none;
+  width: 400px;
+  background-color: #fff;
+  border-color: transparent;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5), 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.search-container input:focus::placeholder {
+  opacity: 0.5;
+}

@@ -3,16 +3,17 @@ import { useParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import '../../css/VideoViewer.css';
 
+
 const VideoViewer = () => {
     const { videoId } = useParams();
     const [allItems, setAllItems] = useState([]);
     const [team0Items, setTeam0Items] = useState([]);
     const [team1Items, setTeam1Items] = useState([]);
-    // const [team2Items, setTeam2Items] = useState([]);
     const [minimapItems, setMinimapItems] = useState([]);
     const [isDataLoaded, setIsDataLoaded] = useState({ allItems: false, minimap: false });
     const [currentMinimapItems, setCurrentMinimapItems] = useState([]);
     const [teamColors, setTeamColors] = useState({});
+    const [searchNumbers, setSearchNumbers] = useState([]);
 
     const canvasRef = useRef(null);
     const minimapRef = useRef(null);
@@ -101,8 +102,23 @@ const VideoViewer = () => {
             ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
             ctx.fillStyle = color;
             ctx.fill();
+
+            ctx.font = 'bold 10px Arial';  
+            ctx.fillStyle = 'white';       
+            ctx.textAlign = 'center';     
+            ctx.textBaseline = 'middle';   
+            // ctx.fillText(item.jerseyNumber, x, y);  
         }
     }, [currentMinimapItems, teamColors]);
+
+    const handleSearchChange = (event) => {
+        const inputValue = event.target.value;
+        const numbers = inputValue
+            .split(/[\s,]+/) 
+            .filter(num => num.trim() !== '') 
+            .map(num => num.trim());
+        setSearchNumbers(numbers);
+    };
 
     const drawOverlay = useCallback(() => {
         const canvas = canvasRef.current;
@@ -131,23 +147,26 @@ const VideoViewer = () => {
         if (player instanceof window.YT.Player && typeof player.getPlayerState === 'function') {
             if (player.getPlayerState() === window.YT.PlayerState.PLAYING && typeof player.getCurrentTime === 'function') {
                 const currentTime = player.getCurrentTime();
-                const fps = 30; // 비디오 FPS 확인 필요
+                const fps = 30; 
                 const currentFrame = Math.floor(currentTime * fps);
 
                 console.log('현재 시간:', currentTime);
                 console.log('현재 프레임:', currentFrame);
 
-                const filteredItems = allItems
+                let filteredItems = allItems
                     .filter(item => item.frameNumber === currentFrame)
                     .filter(item => item.jerseyNumber !== 100 && item.jerseyNumber !== 0);
 
+                if (searchNumbers.length > 0) {
+                    filteredItems = filteredItems.filter(item => searchNumbers.includes(item.jerseyNumber.toString()));
+                }
+                    
                 console.log('필터링된 아이템:', filteredItems);
 
                 setTeam0Items(filteredItems.filter(item => item.team === 0));
                 setTeam1Items(filteredItems.filter(item => item.team === 1));
-                // setTeam2Items(filteredItems.filter(item => item.team === 2));
 
-                // 현재 프레임에 해당하는 미니맵 아이템 업데이트
+                
                 const currentMinimapItems = minimapItems
                     .filter(item => item.frameNumber === currentFrame);
                 console.log('필터링된 미니맵 아이템:', currentMinimapItems);
@@ -189,7 +208,7 @@ const VideoViewer = () => {
                 }
             }
         }
-    }, [allItems, minimapItems, teamColors]);
+    }, [allItems, minimapItems, teamColors, searchNumbers]);
 
     const initializeYouTubePlayer = useCallback(() => {
         if (!playerRef.current || playerInstanceRef.current) return;
@@ -354,6 +373,13 @@ const VideoViewer = () => {
                             <li key={item.idx}>{item.jerseyNumber}</li>
                         ))}
                     </ul>
+                </div>
+                <div className="search-container">
+                    <input
+                        type="text"
+                        placeholder="선수 번호 검색 (쉼표 또는 공백으로 구분)"
+                        onChange={handleSearchChange}
+                    />
                 </div>
             </div>
         </div>

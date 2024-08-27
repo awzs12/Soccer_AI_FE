@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import '../../css/VideoViewer.css';
-
+import PlayerNameInput from '../../components/PlayerNameInput';
 
 const VideoViewer = () => {
     const { videoId } = useParams();
@@ -14,6 +14,7 @@ const VideoViewer = () => {
     const [currentMinimapItems, setCurrentMinimapItems] = useState([]);
     const [teamColors, setTeamColors] = useState({});
     const [searchNumbers, setSearchNumbers] = useState([]);
+    const [players, setPlayers] = useState([]);
 
     const canvasRef = useRef(null);
     const minimapRef = useRef(null);
@@ -199,7 +200,8 @@ const VideoViewer = () => {
                     ctx.fillStyle = 'white';
                     ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
                     ctx.lineWidth = 2;
-                    const text = `${item.jerseyNumber}`;
+                    const player = players.find(p => p.jerseyNumber === item.jerseyNumber && p.team === item.team);
+                    const text = player ? `${item.jerseyNumber} - ${player.player_name}` : `${item.jerseyNumber}`;
                     const textWidth = ctx.measureText(text).width;
                     const orgX = x - textWidth / 2;
                     const orgY = y + Math.floor(height / 2) + 25;
@@ -208,7 +210,7 @@ const VideoViewer = () => {
                 }
             }
         }
-    }, [allItems, minimapItems, teamColors, searchNumbers]);
+    }, [allItems, minimapItems, teamColors, searchNumbers, players]);
 
     const initializeYouTubePlayer = useCallback(() => {
         if (!playerRef.current || playerInstanceRef.current) return;
@@ -248,6 +250,10 @@ const VideoViewer = () => {
         console.log('새로운 플레이어 생성:', newPlayer);
         playerInstanceRef.current = newPlayer;
     }, [videoId, drawOverlay, drawMinimap]);
+
+    const handlePlayersUpdate = useCallback((updatedPlayers) => {
+        setPlayers(updatedPlayers);
+    }, []);
 
     useEffect(() => {
         fetchAllItemsData();
@@ -349,7 +355,7 @@ const VideoViewer = () => {
                     <div className="bg"></div>
                     <h1>Video Viewer</h1>
                 </div>
-
+    
                 <div className="content-box">
                     <div className="video-player-container">
                         <div ref={playerRef} className="video-player" />
@@ -359,21 +365,26 @@ const VideoViewer = () => {
                         <canvas ref={minimapRef} className="minimap-canvas" />
                     </div>
                 </div>
-                <div className="player-list">
-                    <h2>선수 목록</h2>
-                    <h3>팀 0</h3>
-                    <ul>
-                        {team0Items.map(item => (
-                            <li key={item.idx}>{item.jerseyNumber}</li>
-                        ))}
-                    </ul>
-                    <h3>팀 1</h3>
-                    <ul>
-                        {team1Items.map(item => (
-                            <li key={item.idx}>{item.jerseyNumber}</li>
-                        ))}
-                    </ul>
+    
+                
+                <div className="player-list-container">
+                    <div className="player-list">   
+                        <h2>선수 목록</h2>
+                        <h3>팀 0</h3>
+                        <ul>
+                            {team0Items.map(item => (
+                                <li key={item.idx}>{item.jerseyNumber}</li>
+                            ))}
+                        </ul>
+                        <h3>팀 1</h3>
+                        <ul>
+                            {team1Items.map(item => (
+                                <li key={item.idx}>{item.jerseyNumber}</li>
+                            ))}
+                        </ul>
+                    </div>
                 </div>
+    
                 <div className="search-container">
                     <input
                         type="text"
@@ -381,9 +392,13 @@ const VideoViewer = () => {
                         onChange={handleSearchChange}
                     />
                 </div>
+    
+                <PlayerNameInput
+                    videoId={videoId}
+                    onPlayersUpdate={handlePlayersUpdate}
+                />
             </div>
         </div>
     );
-};
-
+};    
 export default VideoViewer;

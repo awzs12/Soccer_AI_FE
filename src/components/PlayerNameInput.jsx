@@ -86,7 +86,7 @@ const PlayerNameInput = ({ videoId, onPlayersUpdate }) => {
     };
 
     return (
-    <div className="container">
+    <div className="player-container">
         <form onSubmit={saveOrUpdatePlayer} className="form-inline">
             <input
                 type="number"
@@ -114,7 +114,7 @@ const PlayerNameInput = ({ videoId, onPlayersUpdate }) => {
             {selectedPlayer && <button type="button" onClick={resetForm}>취소</button>}
         </div>
     </form>
-    <ul>
+    <ul className="player-list">
         {players.map(player => (
             <li key={player.id}>
                 <div className="player-info">

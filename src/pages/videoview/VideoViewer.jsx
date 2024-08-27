@@ -355,7 +355,7 @@ const VideoViewer = () => {
                     <div className="bg"></div>
                     <h1>Video Viewer</h1>
                 </div>
-    
+
                 <div className="content-box">
                     <div className="video-player-container">
                         <div ref={playerRef} className="video-player" />
@@ -365,26 +365,21 @@ const VideoViewer = () => {
                         <canvas ref={minimapRef} className="minimap-canvas" />
                     </div>
                 </div>
-    
-                
-                <div className="player-list-container">
-                    <div className="player-list">   
-                        <h2>선수 목록</h2>
-                        <h3>팀 0</h3>
-                        <ul>
-                            {team0Items.map(item => (
-                                <li key={item.idx}>{item.jerseyNumber}</li>
-                            ))}
-                        </ul>
-                        <h3>팀 1</h3>
-                        <ul>
-                            {team1Items.map(item => (
-                                <li key={item.idx}>{item.jerseyNumber}</li>
-                            ))}
-                        </ul>
-                    </div>
+                <div className="player-list">
+                    <h2>선수 목록</h2>
+                    <h3>팀 0</h3>
+                    <ul>
+                        {team0Items.map(item => (
+                            <li key={item.idx}>{item.jerseyNumber}</li>
+                        ))}
+                    </ul>
+                    <h3>팀 1</h3>
+                    <ul>
+                        {team1Items.map(item => (
+                            <li key={item.idx}>{item.jerseyNumber}</li>
+                        ))}
+                    </ul>
                 </div>
-    
                 <div className="search-container">
                     <input
                         type="text"
@@ -392,7 +387,6 @@ const VideoViewer = () => {
                         onChange={handleSearchChange}
                     />
                 </div>
-    
                 <PlayerNameInput
                     videoId={videoId}
                     onPlayersUpdate={handlePlayersUpdate}
@@ -400,5 +394,6 @@ const VideoViewer = () => {
             </div>
         </div>
     );
-};    
+};
+
 export default VideoViewer;
